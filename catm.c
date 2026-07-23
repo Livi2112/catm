@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-// Mudar checagem de flags pra decidir qual eh o arquivo 
+ 
 
 // Flag bitmask
 #define FLAG_HELP (1 << 0)
 #define FLAG_INFO (1 << 1)
 #define FLAG_LESS (1 << 2)
 #define FLAG_HEX  (1 << 3)
+
 
 void
 die(const char *msg)
@@ -17,6 +17,7 @@ die(const char *msg)
 	fputc('\n', stderr);
 	exit(EXIT_FAILURE);
 }
+
 
 void
 printHelp()
@@ -30,6 +31,7 @@ printHelp()
 	printf("  -x, --hex     Print file in hexdump format\n");
 }	
 
+
 void
 printFileContent(const char* filename)
 {
@@ -41,41 +43,61 @@ printFileContent(const char* filename)
 
 }
 
+
+void
+usageError()
+{
+	die("[ERROR]: Usage \"catm <FILENAME> -<FLAGS>\"\nTry \"catm -h\" or \"catm --help\" for usage and flags specification\n");
+}
+
+
 int
 main(int argc, char* argv[])
 {	
 
 	unsigned int flags = 0;
+	char *filename = NULL;
 
 	// Wrong arguments/usage handling
 	if(argc < 2)
-	{ 
-		die("[ERROR]: Usage \"catm <FILENAME> -<FLAGS>\"\nTry \"catm -h\" or \"catm --help\" for usage and flags specification\n");
+	{
+	       usageError();	
 	}
 
 	// Process flags and add to bitmask
-	for(int i = 0; i < argc; i++)
+	for(int i = 1; i < argc; i++)
 	{
 		if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
 		{
-			flags |= FLAG_HELP;				
+			flags |= FLAG_HELP;
+			continue;			
 		}
 
 		if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--info") == 0)
 		{	
 			flags |= FLAG_INFO;
+			continue;
 		}
 	
 		if(strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--less") == 0)
 		{	
 			flags |= FLAG_LESS;
+			continue;
 		}
 
 		if(strcmp(argv[i], "-x") == 0 || strcmp(argv[i], "--hex") == 0)
 		{
 			flags |= FLAG_HEX;
+			continue;
 		}
-	}
+		
+		if(filename != NULL)
+		{
+			usageError();
+		}
+
+		filename = argv[i];
+	}	
 
 	// Handle help flag
 	if(flags & FLAG_HELP)
