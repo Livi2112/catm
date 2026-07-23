@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <pwd.h>
+#include <grp.h>
  
 
 // Flag bitmask
@@ -20,6 +24,13 @@ die(const char *msg)
 
 
 void
+usageError()
+{
+	die("[ERROR]: Usage \"catm <FILENAME> -<FLAGS>\"\nTry \"catm -h\" or \"catm --help\" for usage and flags specification\n");
+}
+
+
+void
 printHelp()
 {
 	printf("catm stands for cat and more\n");
@@ -33,6 +44,43 @@ printHelp()
 
 
 void
+printFileInfo(const char* filename)
+{
+	struct stat fileInfo;
+
+	if(stat(filename, &fileInfo) != 0)
+	{
+		usageError();
+	}
+
+	printf("=================================\n");
+	printf(" FILE INFO: %s\n", filename);
+	printf("=================================\n");
+
+	printf("Type: ");
+	if(S_ISREG(fileInfo.st_mode)) printf("Regular\n");
+	else if(S_ISDIR(fileInfo.st_mode)) printf("Dir\n");
+	else if(S_ISLNK(fileInfo.st_mode)) printf("Link\n");
+	else printf("Unable to identify\n");
+
+	double sizeKB = fileInfo.st_size / 1024.0;
+	printf("Size: %ld bytes (%.2f KB)\n", fileInfo.st_size, sizeKB);
+
+	printf("Permissions: 0%o\n", fileInfo.st_mode & 0777);
+	
+	struct passwd *pw = getpwuid(fileInfo.st_uid);
+	struct group *gr = getgrgid(fileInfo.st_gid);
+	printf("Owner: %s\n", pw ? pw->pw_name : "Unknown");
+	printf("Group: %s\n", gr ? gr->gr_name : "Unknown");
+
+	char date[100];
+	struct tm *timeInfo = localtime(&fileInfo.st_mtime);
+	strftime(date, sizeof(date), "%d/%m/%Y %H:%M:%S", timeInfo);
+	printf("Last modified in: %s\n", date);
+}
+
+
+void
 printFileContent(const char* filename)
 {
 	FILE* f = fopen(filename, "r");
@@ -41,7 +89,7 @@ printFileContent(const char* filename)
 		die("[ERROR] File not loaded correctly, consider checking filename and usage");
 	}
 
-	char data[50];
+	char data[1024];
 	
 	while(fgets(data, 50, f) != NULL)
 	{
@@ -49,13 +97,6 @@ printFileContent(const char* filename)
 	}
 
 	fclose(f);
-}
-
-
-void
-usageError()
-{
-	die("[ERROR]: Usage \"catm <FILENAME> -<FLAGS>\"\nTry \"catm -h\" or \"catm --help\" for usage and flags specification\n");
 }
 
 
@@ -117,12 +158,12 @@ main(int argc, char* argv[])
 	// Handle info flag
 	if(flags & FLAG_INFO)
 	{
-		printf("info");
+		printFileInfo(filename);
 	}
 
 	if(!(flags & FLAG_LESS))
 	{
-		printFileContent(argv[1]);
+		printFileContent(filename);
 	}
 	
 	return EXIT_SUCCESS;
