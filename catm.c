@@ -41,6 +41,14 @@ printFileContent(const char* filename)
 		die("[ERROR] File not loaded correctly, consider checking filename and usage");
 	}
 
+	char data[50];
+	
+	while(fgets(data, 50, f) != NULL)
+	{
+		printf("%s", data);
+	}
+
+	fclose(f);
 }
 
 
