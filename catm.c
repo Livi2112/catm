@@ -60,7 +60,7 @@ printFileInfo(const char* filename)
 	printf("Type: ");
 	if(S_ISREG(fileInfo.st_mode)) printf("Regular\n");
 	else if(S_ISDIR(fileInfo.st_mode)) printf("Dir\n");
-	else if(S_ISLNK(fileInfo.st_mode)) printf("Link\n");
+	else if(S_ISLNK(fileInfo.st_mode)) printf("Symbolic link\n");
 	else printf("Unable to identify\n");
 
 	double sizeKB = fileInfo.st_size / 1024.0;
@@ -79,6 +79,11 @@ printFileInfo(const char* filename)
 	printf("Last modified in: %s\n", date);
 }
 
+void
+printFileHex(const char* filename)
+{
+	die("[Error] Hexdump not yet implemented");
+}
 
 void
 printFileContent(const char* filename)
@@ -161,10 +166,18 @@ main(int argc, char* argv[])
 		printFileInfo(filename);
 	}
 
+	// Handle less flag
 	if(!(flags & FLAG_LESS))
 	{
 		printFileContent(filename);
 	}
+
+	// Handle hex flag
+	if((flags & FLAG_HEX))
+	{
+		printFileHex(filename);
+	}
+
 	
 	return EXIT_SUCCESS;
 }
